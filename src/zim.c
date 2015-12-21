@@ -3,33 +3,30 @@
 #include <ncurses.h>
 #include <string.h>
 #include "ascii.h"
-
-typedef struct {
-	char * text;
-	int size;
-} Buffer;
+#include "structures.h"
 
 // Keep track of position and size of window
-int r, c, nrows, ncols, i;
+int r, c, nrows, ncols;
 
-Buffer * create_buffer(int size);
-void read_file(char * filename, Buffer * buf);
+Node * read_file(char * filename, Buffer * buf);
 void write_file(char * filename, Buffer *buf);
 void back();
 void forward();
+void up();
+void down();
 void draw (char dc);
 void backspace();
-void handleInput(int d, Buffer *buf);
 
 int main(int argc, char ** argv)
 {
 	// Declare
 	int d;
-	i = 0;
+	Node * current;
 
 	// Buffer object
 	Buffer *buf = create_buffer(1024); 
-	buf->text[0] = '\0';
+	buf->head = create_node(0, NULL, NULL);
+	current = buf->head;	
 
 	// File declarations
 	FILE *fp;
@@ -45,8 +42,9 @@ int main(int argc, char ** argv)
 		strcpy(filename, argv[1]);
 
 		// Open the file and check for error
-		read_file(filename, buf);
-		i--;
+		current = read_file(filename, buf);
+
+
 	}
 
 	// Setup window
@@ -57,16 +55,16 @@ int main(int argc, char ** argv)
 	getmaxyx(wnd, nrows, ncols);
 	clear();
 	refresh();
-	
+
 	// Print characters if file was loaded
 	if (fileLoaded)
 	{
-		for (int j = 0; j < i; j++)
+		Node * temp = buf->head->next;
+		while (temp != NULL)
 		{
-			// Only print newlines and characters
-			if (buf->text[j] == NEWLINE)
+			// Do appropriate action with character
+			if (temp->c == NEWLINE)
 			{
-				// Move to beginning of next line
 				if (r < nrows)
 				{
 					r++;
@@ -75,27 +73,50 @@ int main(int argc, char ** argv)
 
 				move(r, c);
 			}
-			else if (buf->text[j] != '\0')
-			{
-				draw(buf->text[j]);
-			}
-		}	
+			else if (temp->c != '\0')
+				draw(temp->c);
+
+			// Move down the linked list
+			temp = temp->next;
+		}
 	}
 
-	while (1)
+	// Main input loop
+	while ((d = getch()) != ESCAPE)
 	{
-		d = getch();
-
-		if (d == ESCAPE)
-			break;
-		else if (d == BACKSPACE || d == DELETE || d == KEY_BACKSPACE || d == KEY_DC)
+		if (d == BACKSPACE || d == DELETE || d == KEY_BACKSPACE || d == KEY_DC)
 		{
-			i--;
-			buf->text[i] = 0;
-			backspace();
+			if (current != buf->head)
+			{
+				// Remove the previous node
+				Node *temp = current;
+				current = current->prev;
+				remove_node(temp);
+				backspace();
+			}
+		}
+		else if (d == NEWLINE || d == KEY_ENTER)
+		{
+			// Insert node
+			current->next = create_node(NEWLINE, current, current->next);
+			current = current->next;
+
+			// Move to beginning of next line
+			if (r < nrows)
+			{
+				r++;
+				c = 0;
+			}
+
+			move(r, c);
 		}
 		else
-			handleInput(d, buf);
+		{
+			// Insert node
+			current->next = create_node(d, current, current->next);
+			current = current->next;
+			draw(d);
+		}
 	}
 
 	// Close window
@@ -116,41 +137,35 @@ int main(int argc, char ** argv)
 		write_file(filename, buf);
 	}
 
-	// Free buffer
-	free(buf->text);
-	free(buf);
+	// Delete buffer
+	delete_buffer(buf);
 	return 0;
 }
 
-// Create and return a buffer
-Buffer * create_buffer(int size)
-{
-	Buffer * buf = malloc(sizeof(Buffer));
-	buf->size = size;
-	buf->text = calloc(size, sizeof(char));
-	return buf;
-}
-
 // Read data from file into buffer
-void read_file(char * filename, Buffer * buf)
+Node * read_file(char * filename, Buffer * buf)
 {
 	FILE *fp;
-	
+
 	if ((fp = fopen(filename, "r")) == NULL)
 	{
-		printf("Error opening file to read");
+		printf("Error opening file to read\n");
 		fflush(stdout);
 		exit(1);
 	}
-	
+
 	int d;
-	
+	Node * current = buf->head;
+
 	while ((d = fgetc(fp)) != '\0')
 	{
-		buf->text[i++] = d;
+		current->next = create_node(d, current, NULL);	
+		current = current->next;	
 	}
-
+	
 	fclose(fp);
+
+	return current;
 }
 
 // Write buffer to file
@@ -166,18 +181,29 @@ void write_file(char * filename, Buffer * buf)
 	}
 
 	// Write to file
-	for (int i = 0; i < buf->size; i++)
-	{
-		if (buf->text[i] == 3)
-			break;
-		if (buf->text[i] != 0)
-			fputc(buf->text[i], fp);
-	}
-	fputc(3, fp);
-	fputc('\0', fp);
+	Node *temp = buf->head->next;
 
+	while (temp != NULL)
+	{
+		fputc(temp->c, fp);
+		temp = temp->next;
+	}
+
+	fputc('\0', fp);
+	fputc('\n', fp);
 	// Close file
 	fclose(fp);
+}
+
+// Cursor movements
+void up()
+{
+
+}
+
+void down()
+{
+
 }
 
 // Navigation functions with overflow control
@@ -218,7 +244,7 @@ void draw (char dc)
 
 	// Refresh the window
 	refresh();
-	
+
 	// Advance column
 	if (c < ncols)
 		c++;
@@ -239,7 +265,7 @@ void backspace()
 			c = ncols;
 			r--;
 			move(r, c);	
-			
+
 			// Move left until not whitespace
 			while ((inch() & A_CHARTEXT) == 32 && c > 0)
 			{
@@ -265,53 +291,11 @@ void backspace()
 
 		// Move to the current position
 		move(r, c);
-		
+
 		// Delete the character there
 		delch();
 
 		// Refresh the window
 		refresh();
-	}
-}
-
-void handleInput(int d, Buffer *buf)
-{
-	if (d == 10 || d == KEY_ENTER)
-	{
-		if (i < buf->size)
-		{
-			if (buf->text[i] == '\0')
-				buf->text[i+1] = '\0';
-			buf->text[i] = NEWLINE;
-			i++;
-
-			// Move to beginning of next line
-			if (r < nrows)
-			{
-				r++;
-				c = 0;
-			}
-
-			move(r, c);
-		}
-		else
-		{
-			exit(1);
-		}
-	}
-	else
-	{
-		if (i < buf->size)
-		{
-			if (buf->text[i] == '\0')
-				buf->text[i+1] = '\0';
-			buf->text[i] = d;
-			draw(d);
-			i++;
-		}
-		else
-		{
-			exit(1);
-		}
 	}
 }
