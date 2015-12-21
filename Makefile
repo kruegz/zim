@@ -1,2 +1,2 @@
 all:
-	cc src/zim.c -o bin/zim -lncurses
+	cc src/zim.c src/structures.c -o bin/zim -lncurses 
