@@ -7,13 +7,15 @@
 
 // Keep track of position and size of window
 int r, c, nrows, ncols;
+Node * current;
 
 Node * read_file(char * filename, Buffer * buf);
 void write_file(char * filename, Buffer *buf);
-void back();
-void forward();
+void left();
+void right();
 void up();
 void down();
+void skipWhitespace();
 void draw (char dc);
 void backspace();
 
@@ -21,7 +23,6 @@ int main(int argc, char ** argv)
 {
 	// Declare
 	int d;
-	Node * current;
 
 	// Buffer object
 	Buffer *buf = create_buffer(1024); 
@@ -52,6 +53,7 @@ int main(int argc, char ** argv)
 	wnd = initscr();
 	cbreak();
 	noecho();
+	keypad(stdscr, TRUE);
 	getmaxyx(wnd, nrows, ncols);
 	clear();
 	refresh();
@@ -84,7 +86,15 @@ int main(int argc, char ** argv)
 	// Main input loop
 	while ((d = getch()) != ESCAPE)
 	{
-		if (d == BACKSPACE || d == DELETE || d == KEY_BACKSPACE || d == KEY_DC)
+		if (d == KEY_LEFT)
+			left();
+		else if (d == KEY_RIGHT)
+			right();
+		else if (d == KEY_UP)
+			up();
+		else if (d == KEY_DOWN)
+			down();
+		else if (d == BACKSPACE || d == DELETE || d == KEY_BACKSPACE || d == KEY_DC)
 		{
 			if (current != buf->head)
 			{
@@ -157,7 +167,7 @@ Node * read_file(char * filename, Buffer * buf)
 	int d;
 	Node * current = buf->head;
 
-	while ((d = fgetc(fp)) != '\0')
+	while ((d = fgetc(fp)) != EOF)
 	{
 		current->next = create_node(d, current, NULL);	
 		current = current->next;	
@@ -189,39 +199,22 @@ void write_file(char * filename, Buffer * buf)
 		temp = temp->next;
 	}
 
-	fputc('\0', fp);
-	fputc('\n', fp);
 	// Close file
 	fclose(fp);
 }
 
 // Cursor movements
-void up()
-{
-
-}
-
-void down()
-{
-
-}
-
-// Navigation functions with overflow control
-void back()
+void left()
 {
 	if (c == 0)
-	{
-		if (r != 0)
-		{
-			c = ncols;
-			r--;
-		}
-	}
+		skipWhitespace();	
 	else
 		c--;
+	move(r, c);
+	current = current->prev;
 }
 
-void forward()
+void right()
 {
 	if (c == ncols)
 	{
@@ -232,7 +225,31 @@ void forward()
 		}
 	}
 	else
-		c++;
+	{
+		if (current->next->c == NEWLINE)
+		{
+			if (r != nrows)
+			{
+				c = 0;
+				r++;
+			}
+		}
+		else
+		{
+			c++;
+		}
+	}
+	move(r, c);
+}
+
+void up()
+{
+
+}
+
+void down()
+{
+
 }
 
 // Draw a character at position
@@ -253,35 +270,39 @@ void draw (char dc)
 	move(r, c);
 }
 
+// Move back to non-whitespace
+void skipWhitespace()
+{
+	// Move to the end of the previous row
+	c = ncols;
+	r--;
+	move(r, c);	
+
+	// Move left until not whitespace
+	while ((inch() & A_CHARTEXT) == 32 && c > 0)
+	{
+		c--;
+		move(r, c);
+	}
+	if ((inch() & A_CHARTEXT) != 32)
+	{
+		if (c == 0)
+			c++;
+		else
+			c++;
+	}
+	move(r, c);
+	refresh();
+}
+
 // Perform a backspace
 void backspace()
 {
 	// Check to see if we're deleting a newline
 	if (c == 0)
-	{	
+	{
 		if (r != 0)
-		{
-			// Move to the end of the previous row
-			c = ncols;
-			r--;
-			move(r, c);	
-
-			// Move left until not whitespace
-			while ((inch() & A_CHARTEXT) == 32 && c > 0)
-			{
-				c--;
-				move(r, c);
-			}
-			if ((inch() & A_CHARTEXT) != 32)
-			{
-				if (c == 0)
-					c++;
-				else
-					c++;
-			}
-			move(r, c);
-			refresh();
-		}
+			skipWhitespace();
 	}
 	else
 	{	
