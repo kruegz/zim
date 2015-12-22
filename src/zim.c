@@ -15,6 +15,7 @@ void left();
 void right();
 void up();
 void down();
+void shiftRestRight();
 void skipWhitespace();
 void draw (char dc);
 void backspace();
@@ -125,6 +126,7 @@ int main(int argc, char ** argv)
 			// Insert node
 			current->next = create_node(d, current, current->next);
 			current = current->next;
+			shiftRestRight();
 			draw(d);
 		}
 	}
@@ -250,6 +252,21 @@ void up()
 void down()
 {
 
+}
+
+void shiftRestRight()
+{
+	int temp = c;
+	c = ncols;
+	while (c > temp)
+	{
+		mvdelch(r, c);
+		mvinsch(r, c, mvinch(r, c-1));
+		refresh();
+		c--;
+	}
+	c = temp;
+	move(r, c);
 }
 
 // Draw a character at position
