@@ -14,6 +14,14 @@ typedef struct {
 	int size;
 } Buffer;
 
+typedef struct line Line;
+
+struct line {
+	Node * head;
+	int length;
+	Line * next;
+};
+
 // Node function declarations
 Node * create_node(char c, Node *prev, Node *next);
 void remove_node(Node *node);

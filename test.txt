@@ -1,7 +1,10 @@
-asdfasdfasdf
-asdfasdfasdf
-asdfasdfasdf
+Here is some text!
+
+It supports backspace and newlines!
 
 asdf
 
-asdfasdfasdfasdfasdf
+asdfasdf
+
+
+asdfasdfasdf
