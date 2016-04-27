@@ -24,25 +24,60 @@ void remove_node (Node *node)
 	free(node);
 }
 
-// Create a buffer
-Buffer * create_buffer (int size)
+// Create a Line 
+Line * create_line(int length)
 {
-	Buffer * new = malloc(sizeof(Buffer));
-	new->size = size;
+	// Allocate enough memory
+	Line * new = malloc(sizeof(Line));
+	new->length = length;
+
+	// Make a blank start node
+	new->head = create_node(0, NULL, NULL);
+	new->next = NULL;
+	new->prev = NULL;
+
 	return new;
 }
 
-// Delete a buffer
-void delete_buffer (Buffer * buf)
+// Delete a Line 
+void delete_line(Line * line)
 {
 	// Start at the head node
-	Node * cur = buf->head;
+	Node * cur = line->head;
 	Node * temp;
+
 	while (cur != NULL)
 	{
-		temp = cur;
-		cur = cur->next;
-		free(temp);
+		// Store the next node
+		temp = cur->next;
+
+		// Free the current node
+		free(cur);
+
+		// Move to the next node
+		cur = temp;
 	}
-	free(buf);
+
+	// Free the line itself
+	free(line);
+}
+
+// Delete a list of lines
+void delete_all_lines(Line * head)
+{
+	// Start at the first line
+	Line * current = head;
+	Line * temp;
+	
+	while (current != NULL)
+	{
+		// Store next line
+		temp = current->next;
+
+		// Delete all nodes in current line
+		delete_line(current);
+
+		// Move to the next line
+		current = temp;
+	}
 }

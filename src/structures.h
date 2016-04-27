@@ -2,32 +2,31 @@
 #define STRUCTURES_H
 
 // Node definitions
-typedef struct node {
+typedef struct node Node;
+
+struct node {
 	char c;
-	struct node * next;
-	struct node * prev;
-} Node;
+	Node * next;
+	Node * prev;
+};
 
-// Buffer definition
-typedef struct {
-	Node * head;
-	int size;
-} Buffer;
-
+// Line definition
 typedef struct line Line;
 
 struct line {
 	Node * head;
 	int length;
 	Line * next;
+	Line * prev;
 };
 
 // Node function declarations
 Node * create_node(char c, Node *prev, Node *next);
 void remove_node(Node *node);
 
-// Buffer function declarations
-Buffer * create_buffer(int size);
-void delete_buffer(Buffer * buf);
+// Line function declarations
+Line * create_line(int size);
+void delete_line(Line * line);
+void delete_all_lines(Line * head);
 
 #endif
