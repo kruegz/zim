@@ -98,14 +98,40 @@ int main(int argc, char ** argv)
 	{
 		if (d == BACKSPACE || d == DELETE || d == KEY_BACKSPACE || d == KEY_DC)
 		{
-			/*if (current != line->head)*/
-			/*{*/
-			/*// Remove the previous node*/
-			/*Node *temp = current;*/
-			/*current = current->prev;*/
-			/*remove_node(temp);*/
-			/*backspace();*/
-			/*}*/
+			// Don't backspace first character
+			if (currentNode != headLine->head)
+			{
+				// Check if we're on the first character of a line
+				if (currentNode->prev == NULL)
+				{
+					// Check if there is a line before this one
+					if (currentLine->prev != NULL)
+					{
+						Line *temp = currentLine;
+
+						// Move to the end of the previous line
+						currentLine = currentLine->prev;
+						currentNode = currentLine->head;
+
+						while (currentNode->next != NULL)
+							currentNode = currentNode->next;
+
+						// Delete the line
+						remove_line(temp);
+					}
+				}
+				else
+				{
+					// Remove the previous node
+					Node *temp = currentNode;
+					currentNode = currentNode->prev;
+
+					remove_node(temp);
+				}
+				
+				// Perform the visual backspace
+				backspace();
+			}
 		}
 		else if (d == NEWLINE || d == KEY_ENTER)
 		{

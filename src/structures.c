@@ -15,13 +15,28 @@ Node * create_node (char c, Node *prev, Node *next)
 void remove_node (Node *node)
 {
 	// Break connection
-	node->prev->next = node->next;
+	if (node->prev != NULL)
+		node->prev->next = node->next;
 	
 	if (node->next != NULL)
 		node->next->prev = node->prev;
 
 	// Free memory
 	free(node);
+}
+
+// Remove a line
+void remove_line(Line *line)
+{
+	// Break connections if they exist
+	if (line->prev != NULL)
+		line->prev->next = line->next;
+
+	if (line->next != NULL)
+		line->next->prev = line->prev;
+
+	// Free memory
+	delete_line(line);
 }
 
 // Create a Line 

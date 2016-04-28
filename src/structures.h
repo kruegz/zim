@@ -23,6 +23,7 @@ struct line {
 // Node function declarations
 Node * create_node(char c, Node *prev, Node *next);
 void remove_node(Node *node);
+void remove_line(Line *line);
 
 // Line function declarations
 Line * create_line(Line *prev, Line *next);
