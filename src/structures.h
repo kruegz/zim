@@ -25,7 +25,7 @@ Node * create_node(char c, Node *prev, Node *next);
 void remove_node(Node *node);
 
 // Line function declarations
-Line * create_line(int size);
+Line * create_line(Line *prev, Line *next);
 void delete_line(Line * line);
 void delete_all_lines(Line * head);
 

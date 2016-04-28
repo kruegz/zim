@@ -2,13 +2,14 @@
 #include <stdio.h>
 #include <ncurses.h>
 #include <string.h>
+#include <unistd.h>
 #include "ascii.h"
 #include "structures.h"
 
 // Keep track of position and size of window
 int r, c, nrows, ncols;
 
-Node * read_file(char * filename, Line *line);
+Line * read_file(char * filename, Line *line);
 void write_file(char * filename, Line *line);
 void shiftRestRight();
 void skipWhitespace();
@@ -21,8 +22,9 @@ int main(int argc, char ** argv)
 	int d;
 
 	// Line object
-	Line *headLine= create_line(0); 
-	Node *current = headLine->head;	
+	Line *headLine= create_line(NULL, NULL); 
+	Node *currentNode = headLine->head;	
+	Line *currentLine = headLine;
 
 	// File declarations
 	char filename[100];
@@ -35,7 +37,7 @@ int main(int argc, char ** argv)
 		strcpy(filename, argv[1]);
 
 		// Open the file and check for error
-		/*current = read_file(filename, headLine);*/
+		headLine = read_file(filename, headLine);
 
 		fileLoaded = 1;
 	}
@@ -51,29 +53,45 @@ int main(int argc, char ** argv)
 	refresh();
 
 	// Print characters if file was loaded
-	/*if (fileLoaded)*/
-	/*{*/
-		/*Node * temp = line->head->next;*/
-		/*while (temp != NULL)*/
-		/*{*/
-			/*// Do appropriate action with character*/
-			/*if (temp->c == NEWLINE)*/
-			/*{*/
-				/*if (r < nrows)*/
-				/*{*/
-					/*r++;*/
-					/*c = 0;*/
-				/*}*/
+	if (fileLoaded)
+	{
+		// Loop through lines
+		Line * tempLine = headLine;
+		Node * tempNode;
 
-				/*move(r, c);*/
-			/*}*/
-			/*else if (temp->c != '\0')*/
-				/*draw(temp->c);*/
+		while (tempLine != NULL)
+		{
+			// Loop through characters in line
+			tempNode = tempLine->head;
 
-			/*// Move down the linked list*/
-			/*temp = temp->next;*/
-		/*}*/
-	/*}*/
+			while (tempNode != NULL)
+			{
+				// Do appropriate action with character
+				if (tempNode->c != '\0')
+					draw(tempNode->c);
+
+				// Move to next character
+				currentNode = tempNode;
+				tempNode = tempNode->next;
+			}
+
+			// Move to next line
+			if (tempLine->next != NULL && r < nrows)
+			{
+				r++;
+				c = 0;
+			}
+
+			move(r, c);
+
+			// Move down the linked list
+			currentLine = tempLine;
+			tempLine = tempLine->next;
+		}
+
+		// Set current node to end of loaded file
+		/*currentNode = tempNode->prev->prev;*/
+	}
 
 	// Main input loop
 	while ((d = getch()) != ESCAPE)
@@ -82,31 +100,33 @@ int main(int argc, char ** argv)
 		{
 			/*if (current != line->head)*/
 			/*{*/
-				/*// Remove the previous node*/
-				/*Node *temp = current;*/
-				/*current = current->prev;*/
-				/*remove_node(temp);*/
-				/*backspace();*/
+			/*// Remove the previous node*/
+			/*Node *temp = current;*/
+			/*current = current->prev;*/
+			/*remove_node(temp);*/
+			/*backspace();*/
 			/*}*/
 		}
 		else if (d == NEWLINE || d == KEY_ENTER)
 		{
-			 /*Insert node*/
-			/*current->next = create_node(NEWLINE, current, current->next);*/
-			/*current = current->next;*/
+			// Insert new line
+			currentLine->next = create_line(currentLine, NULL);
+			currentLine = currentLine->next;
+			currentNode = currentLine->head;
 
-			 /*Move to beginning of next line*/
-			/*if (r < nrows)*/
-			/*{*/
-				/*r++;*/
-				/*c = 0;*/
-			/*}*/
+			// Move to beginning of next line
+			if (r < nrows)
+			{
+				r++;
+				c = 0;
+			}
+			move(r, c);
 		}
 		else
 		{
 			// Insert node
-			current->next = create_node(d, current, current->next);
-			current = current->next;
+			currentNode->next = create_node(d, currentNode, currentNode->next);
+			currentNode = currentNode->next;
 			/*shiftRestRight();*/
 			draw(d);
 		}
@@ -137,7 +157,7 @@ int main(int argc, char ** argv)
 }
 
 // Read data from file into buffer
-Node * read_file(char * filename, Line * line)
+Line * read_file(char * filename, Line * headLine)
 {
 	FILE *fp;
 
@@ -149,17 +169,29 @@ Node * read_file(char * filename, Line * line)
 	}
 
 	int d;
-	Node * current = line->head;
+	Line *currentLine = headLine;
+	Node *currentNode = headLine->head;
 
 	while ((d = fgetc(fp)) != EOF)
 	{
-		current->next = create_node(d, current, NULL);	
-		current = current->next;	
+		// Check for newline
+		if (d == NEWLINE)
+		{
+			// Create a new line
+			currentLine->next = create_line(currentLine, NULL);
+			currentLine = currentLine->next;
+			currentNode = currentLine->head;
+		}
+		else
+		{
+			currentNode->next = create_node(d, currentNode, NULL);	
+			currentNode = currentNode->next;	
+		}
 	}
-	
+
 	fclose(fp);
 
-	return current;
+	return headLine;
 }
 
 // Write buffer to file
@@ -197,7 +229,7 @@ void write_file(char * filename, Line * head)
 		// Go to next line
 		currentLine = currentLine->next;
 	}
-		
+
 	// Close file
 	fclose(fp);
 }

@@ -25,16 +25,16 @@ void remove_node (Node *node)
 }
 
 // Create a Line 
-Line * create_line(int length)
+Line * create_line(Line *prev, Line *next)
 {
 	// Allocate enough memory
 	Line * new = malloc(sizeof(Line));
-	new->length = length;
+	new->length = 0;
 
 	// Make a blank start node
 	new->head = create_node(0, NULL, NULL);
-	new->next = NULL;
-	new->prev = NULL;
+	new->next = next;
+	new->prev = prev;
 
 	return new;
 }

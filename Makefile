@@ -1,2 +1,2 @@
 all:
-	cc src/zim.c src/structures.c -o bin/zim -lncurses 
+	gcc -g -Wall -Werror src/zim.c src/structures.c -o bin/zim -lncurses 
