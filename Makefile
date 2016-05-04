@@ -1,2 +1,12 @@
-all:
-	gcc -g -Wall -Werror src/zim.c src/structures.c -o bin/zim -lncurses 
+src = $(wildcard src/*.c)
+obj = $(src:.c=.o)
+
+CFLAGS = -g -Wall -Werror
+LDFLAGS = -lncurses
+
+zim: $(obj)
+	    $(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+.PHONY: clean
+	clean:
+	rm -f $(obj) zim
