@@ -46,8 +46,9 @@ Line * create_line(Line *prev, Line *next)
 	Line * new = malloc(sizeof(Line));
 	new->length = 0;
 
-	// Make a blank start node
-	new->head = create_node(0, NULL, NULL);
+	//new->head = create_node(0, NULL, NULL);
+	new->head = NULL;
+	new->tail = new->head;
 	new->next = next;
 	new->prev = prev;
 

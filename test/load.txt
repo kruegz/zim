@@ -1,0 +1,5 @@
+Here is a file.
+It has some text,
+and some newlines.
+
+There are a couple extra newlines.

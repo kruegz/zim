@@ -71,8 +71,8 @@ int main(int argc, char ** argv)
 					draw(tempNode->c);
 
 				// Move to next character
-				currentNode = tempNode;
 				tempNode = tempNode->next;
+				currentNode = tempNode;
 			}
 
 			// Move to next line
@@ -98,40 +98,61 @@ int main(int argc, char ** argv)
 	{
 		if (d == BACKSPACE || d == DELETE || d == KEY_BACKSPACE || d == KEY_DC)
 		{
-			// Don't backspace first character
-			if (currentNode != headLine->head)
+			// Check if we're on the first character of a line
+			if (currentNode == NULL)
 			{
-				// Check if we're on the first character of a line
-				if (currentNode->prev == NULL)
+				// Check if there is a line before this one
+				if (currentLine->prev != NULL)
 				{
-					// Check if there is a line before this one
-					if (currentLine->prev != NULL)
-					{
-						Line *temp = currentLine;
+					Line *temp = currentLine;
+					/*Node *oldNode = currentNode;*/
 
-						// Move to the end of the previous line
-						currentLine = currentLine->prev;
-						currentNode = currentLine->head;
+					// Attach the remainder of the current line to the previous line
+					/*currentNode->prev = currentLine->prev->tail;*/
+					/*currentLine->prev->tail->next = currentNode;*/
+					/*currentLine->prev->tail = currentLine->tail;*/
 
-						while (currentNode->next != NULL)
-							currentNode = currentNode->next;
+					currentLine->prev->next = currentLine->next;
 
-						// Delete the line
-						remove_line(temp);
-					}
+					/*if (currentLine->next != NULL)*/
+					/*currentLine->next->prev = currentLine->prev;*/
+
+					// Move to the end of the previous line
+					currentLine = currentLine->prev;
+					currentNode = currentLine->tail;
+
+					/*while (currentNode->next != NULL)*/
+					/*currentNode = currentNode->next;*/
+
+					// Delete the node
+					/*remove_node(oldNode);*/
+
+					// Delete the line
+					free(temp);
+
 				}
-				else
-				{
-					// Remove the previous node
-					Node *temp = currentNode;
-					currentNode = currentNode->prev;
-
-					remove_node(temp);
-				}
-				
-				// Perform the visual backspace
-				backspace();
 			}
+			else 
+			{
+				// Remove the previous node
+				Node *temp = currentNode;
+
+				// Keep track of head node
+				if (currentNode == currentLine->head)
+					currentLine->head = currentNode->next;
+
+				// Keep track of tail node
+				if (currentNode == currentLine->tail)
+					currentLine->tail = currentNode->prev;
+
+				currentNode = currentNode->prev;
+
+				remove_node(temp);
+			}
+
+			// Perform the visual backspace
+			backspace();
+
 		}
 		else if (d == NEWLINE || d == KEY_ENTER)
 		{
@@ -151,8 +172,25 @@ int main(int argc, char ** argv)
 		else
 		{
 			// Insert node
-			currentNode->next = create_node(d, currentNode, currentNode->next);
-			currentNode = currentNode->next;
+			if (currentNode != NULL)
+			{
+				// Insert a new node after the current
+				currentNode->next = create_node(d, currentNode, currentNode->next);
+
+				// Keep track of tail node
+				if (currentNode == currentLine->tail)
+					currentLine->tail = currentNode->next;
+
+				currentNode = currentNode->next;
+			}
+			else
+			{
+				currentLine->head = create_node(d, NULL, NULL);
+				currentNode = currentLine->head;
+				currentLine->tail = currentNode;
+			}
+
+
 			/*shiftRestRight();*/
 			draw(d);
 		}
@@ -210,8 +248,23 @@ Line * read_file(char * filename, Line * headLine)
 		}
 		else
 		{
-			currentNode->next = create_node(d, currentNode, NULL);	
-			currentNode = currentNode->next;	
+			if (currentNode != NULL)
+			{
+				// Insert a new node after the current
+				currentNode->next = create_node(d, currentNode, currentNode->next);
+
+				// Keep track of tail node
+				if (currentNode == currentLine->tail)
+					currentLine->tail = currentNode->next;
+
+				currentNode = currentNode->next;
+			}
+			else
+			{
+				currentLine->head = create_node(d, NULL, NULL);
+				currentNode = currentLine->head;
+				currentLine->tail = currentNode;
+			}
 		}
 	}
 

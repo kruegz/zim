@@ -1,0 +1,6 @@
+Testing newlines and backspaces
+sometext
+some other textasdf
+y
+test
+

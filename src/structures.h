@@ -15,6 +15,7 @@ typedef struct line Line;
 
 struct line {
 	Node * head;
+	Node * tail;
 	int length;
 	Line * next;
 	Line * prev;
