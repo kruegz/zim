@@ -12,6 +12,8 @@ int r, c, nrows, ncols;
 Line * read_file(char * filename, Line *line);
 void write_file(char * filename, Line *line);
 void shiftRestRight();
+void drawLine(int row, Line *line);
+void shiftLinesDown(int row, Line *start);
 void skipWhitespace();
 void draw (char dc);
 void backspace();
@@ -68,7 +70,17 @@ int main(int argc, char ** argv)
 			{
 				// Do appropriate action with character
 				if (tempNode->c != '\0')
+				{
+					// Draw character
 					draw(tempNode->c);
+
+					// Advance column
+					if (c < ncols)
+						c++;
+
+					// Move to the current position
+					move(r, c);
+				}
 
 				// Move to next character
 				tempNode = tempNode->next;
@@ -190,9 +202,31 @@ int main(int argc, char ** argv)
 				currentLine->tail = currentNode;
 			}
 
-
 			/*shiftRestRight();*/
 			draw(d);
+
+			// Check if there is room on the currentline
+			if (c < ncols-1)
+			{
+				// Advance column
+				if (c < ncols)
+					c++;
+			}
+			else
+			{
+				// Shift following rows down on display
+				shiftLinesDown(r+1, currentLine->next);			
+
+				// Move to next line
+				if (r < nrows)
+				{
+					r++;
+					c = 0;
+				}
+			}
+
+			// Move to the current position
+			move(r, c);
 		}
 	}
 
@@ -338,12 +372,6 @@ void draw (char dc)
 	// Refresh the window
 	refresh();
 
-	// Advance column
-	if (c < ncols)
-		c++;
-
-	// Move to the current position
-	move(r, c);
 }
 
 // Move back to non-whitespace
@@ -369,6 +397,51 @@ void skipWhitespace()
 	}
 	move(r, c);
 	refresh();
+}
+
+// Draw the characters in a line on a row
+void drawLine(int row, Line *line)
+{
+	int tempRow = row, tempCol = 0;
+	Node *currentNode = line->head;
+
+	move(tempRow, tempCol);
+
+	while (currentNode != NULL)
+	{
+		// Replace the character there
+		delch();
+		insch(currentNode->c);
+
+		// Refresh the window
+		refresh();
+
+		// Advance column
+		if (tempCol < ncols)
+			tempCol++;
+
+		// Move to the current position
+		move(tempRow, tempCol); 
+
+		currentNode = currentNode->next;
+	}
+
+	refresh();
+}
+
+// Shift all lines from row on down one line
+void shiftLinesDown(int row, Line *start)
+{
+	int currentRow = row;
+	Line *currentLine = start;
+
+	// Loop while there is room and lines to draw
+	while (currentRow < nrows && currentLine != NULL)
+	{
+		currentRow++;
+		drawLine(currentRow, start);
+		start = start->next;
+	}
 }
 
 // Perform a backspace
