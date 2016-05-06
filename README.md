@@ -10,6 +10,7 @@ Features
  * File read/write
  * Newlines
  * Backspace
+ * Basic line wrapping
 
 ### Development
  * Cursor movement
