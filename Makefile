@@ -1,16 +1,27 @@
-#src = $(wildcard src/*.c)
-#obj = $(src:.c=.o)
-#CC = gcc
+# Use gcc compiler
+CC = gcc
 
-#CFLAGS = -g -Wall -Werror
-#LDFLAGS = -lncurses
+# -g : Include debugging information
+# -Wall, -Werror : Show all errors and warnings
+# -O2 : Do 2nd level optimization
+# -v : Verbose, show all information
+CFLAGS = -g -Wall -Werror -O2 -v
 
-#zim: $(obj)
-		#$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+# Object files to build to prevent unnecessary compilation
+OBJECTS = src/zim.o src/structures.o 
 
-#.PHONY: clean
-	#clean:
-	#rm -f $(obj) zim
+# Linker flags
+LDFLAGS = -lncurses
 
-all:
-	gcc -g -Wall -Werror src/zim.c src/structures.c -lncurses -o bin/zim
+# Default target that gets called by make
+default : $(OBJECTS)
+	$(CC) $(CFLAGS) $(OBJECTS) $(LDFLAGS) -o bin/zim
+
+# Make object files
+%.o : %.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+# Clean object files and binaries
+clean:
+	rm src/*.o
+	rm bin/*

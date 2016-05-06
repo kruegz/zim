@@ -29,7 +29,7 @@ echo "Testing load files"
 echo "\n"
 
 # Loop through all test files
-for i in `seq 1 2`;
+for i in `seq 1 3`;
 do
 	# Load file in zim and feed input over stdin
 	../bin/zim "load${i}.txt" < "loadTest${i}.txt" >> out.log

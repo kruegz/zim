@@ -15,7 +15,7 @@ void shiftRestRight();
 void drawLine(int row, Line *line);
 void shiftLinesDown(int row, Line *start);
 void skipWhitespace();
-void draw (char dc);
+void draw(char dc, int *row, int *col, Line *currentLine);
 void backspace();
 
 int main(int argc, char ** argv)
@@ -72,14 +72,7 @@ int main(int argc, char ** argv)
 				if (tempNode->c != '\0')
 				{
 					// Draw character
-					draw(tempNode->c);
-
-					// Advance column
-					if (c < ncols)
-						c++;
-
-					// Move to the current position
-					move(r, c);
+					draw(tempNode->c, &r, &c, currentLine);
 				}
 
 				// Move to next character
@@ -203,30 +196,7 @@ int main(int argc, char ** argv)
 			}
 
 			/*shiftRestRight();*/
-			draw(d);
-
-			// Check if there is room on the currentline
-			if (c < ncols-1)
-			{
-				// Advance column
-				if (c < ncols)
-					c++;
-			}
-			else
-			{
-				// Shift following rows down on display
-				shiftLinesDown(r+1, currentLine->next);			
-
-				// Move to next line
-				if (r < nrows)
-				{
-					r++;
-					c = 0;
-				}
-			}
-
-			// Move to the current position
-			move(r, c);
+			draw(d, &r, &c, currentLine);
 		}
 	}
 
@@ -363,8 +333,11 @@ void shiftRestRight()
 }
 
 // Draw a character at position
-void draw (char dc)
+void draw (char dc, int *r, int *c, Line *currentLine)
 {
+	// Move to position
+	move(*r, *c);
+
 	// Replace the character there
 	delch();
 	insch(dc);
@@ -372,6 +345,28 @@ void draw (char dc)
 	// Refresh the window
 	refresh();
 
+	// Check if there is room on the currentline
+	if (*c < ncols-1)
+	{
+		// Advance column
+		if (*c < ncols)
+			(*c)++;
+	}
+	else
+	{
+		// Shift following rows down on display
+		shiftLinesDown(*r+1, currentLine->next);			
+
+		// Move to next line
+		if (*r < nrows)
+		{
+			(*r)++;
+			*c = 0;
+		}
+	}
+	
+	// Move to new position
+	move(*r, *c);
 }
 
 // Move back to non-whitespace
@@ -429,7 +424,7 @@ void drawLine(int row, Line *line)
 	refresh();
 }
 
-// Shift all lines from row on down one line
+// Shift all lines from row to the end of the screen down one line
 void shiftLinesDown(int row, Line *start)
 {
 	int currentRow = row;
@@ -439,8 +434,8 @@ void shiftLinesDown(int row, Line *start)
 	while (currentRow < nrows && currentLine != NULL)
 	{
 		currentRow++;
-		drawLine(currentRow, start);
-		start = start->next;
+		drawLine(currentRow, currentLine);
+		currentLine = currentLine->next;
 	}
 }
 
