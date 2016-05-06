@@ -9,10 +9,10 @@ echo "\n"
 for i in `seq 1 5`;
 do
 	# Feed file into zim via stdin
-	../bin/zim < "test${i}in.txt" >> out.log
+	../bin/zim < "in/${i}.txt" >> out.log
 
 	# Check to see if output matches expected output
-	diff "test" "test${i}out.txt"
+	diff "test" "out/${i}.txt"
 	
 	# Check return of diff to see if files were the same
 	if [ $? -eq 0 ]
@@ -29,12 +29,12 @@ echo "Testing load files"
 echo "\n"
 
 # Loop through all test files
-for i in `seq 1 3`;
+for i in `seq 1 4`;
 do
 	# Load file in zim and feed input over stdin
-	../bin/zim "load${i}.txt" < "loadTest${i}.txt" >> out.log
+	../bin/zim "load/load${i}.txt" < "in/load${i}.txt" >> out.log
 
-	diff "test" "loadTest${i}Out.txt"
+	diff "test" "out/load${i}.txt"
 
 	# Check return of diff to see if files were the same
 	if [ $? -eq 0 ]

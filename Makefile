@@ -24,4 +24,4 @@ default : $(OBJECTS)
 # Clean object files and binaries
 clean:
 	rm src/*.o
-	rm bin/*
+	rm -rf bin/*
